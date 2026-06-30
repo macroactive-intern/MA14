@@ -41,7 +41,10 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function something()
+function consecutiveDates(int $count, string $start = '2026-06-01'): array
 {
-    // ..
+    return array_map(
+        fn ($i) => date('Y-m-d', strtotime("$start +{$i} days")),
+        range(0, $count - 1)
+    );
 }
