@@ -378,3 +378,34 @@ Failed asserting that 404 is identical to 422.
 After
 
 --------------------------------------------------------------------------------------------------------------------------------
+
+ PASS  Tests\Unit\ExampleTest
+  ✓ that true is true
+
+   PASS  Tests\Feature\CoachNotificationSystemTest
+  ✓ it unauthenticated user cannot create check-in                                                                             0.22s  
+  ✓ it authenticated user can create check-in                                                                                  0.04s  
+  ✓ it duplicate check-in date is rejected                                                                                     0.01s  
+  ✓ it streak is calculated correctly for consecutive dates                                                                    0.09s  
+  ✓ it streak stops when there is a gap                                                                                        0.01s  
+  ✓ it 7-day streak creates notification record                                                                                0.02s  
+  ✓ it 14-day streak creates notification record                                                                               0.02s  
+  ✓ it 21-day streak creates notification record                                                                               0.02s  
+  ✓ it 28-day streak creates notification record                                                                               0.02s  
+  ✓ it non-milestone streak does not create notification                                                                       0.01s  
+  ✓ it same milestone is not created twice                                                                                     0.02s  
+  ✓ it same milestone does not dispatch duplicate email job                                                                    0.02s  
+  ✓ it email job is queued not sent synchronously                                                                              0.01s  
+  ✓ it queued job sends mailable when processed                                                                                0.01s  
+  ✓ it job has tries of 3                                                                                                      0.01s  
+  ✓ it failed job does not retry forever                                                                                       0.01s  
+  ✓ it notifications endpoint returns notifications newest first                                                               0.01s  
+  ✓ it notifications endpoint does not leak another user notifications                                                         0.01s  
+  ✓ it deleting a check-in recalculates the streak                                                                             0.01s  
+  ✓ it user cannot delete another user check-in                                                                                0.01s  
+
+   PASS  Tests\Feature\ExampleTest
+  ✓ the application returns a successful response                                                                              0.03s  
+
+  Tests:    22 passed (31 assertions)
+  Duration: 0.76s
