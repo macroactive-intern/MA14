@@ -2,8 +2,11 @@
 
 namespace App\Jobs;
 
+use App\Mail\StreakMilestoneNotification as StreakMilestoneNotificationMail;
+use App\Models\StreakNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Mail;
 
 class SendStreakMilestoneNotification implements ShouldQueue
 {
@@ -17,6 +20,16 @@ class SendStreakMilestoneNotification implements ShouldQueue
 
     public function handle(): void
     {
-        // Implemented in Step 11
+        $notification = StreakNotification::with('user')->find($this->streakNotificationId);
+
+        if (! $notification) {
+            return;
+        }
+
+        Mail::to($notification->user)->send(
+            new StreakMilestoneNotificationMail($notification->streak_milestone)
+        );
+
+        $notification->update(['notified_at' => now()]);
     }
 }
