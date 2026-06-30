@@ -296,8 +296,12 @@ it('deleting a check-in recalculates the streak', function () {
 
     $this->actingAs($user)
         ->deleteJson("/api/check-ins/{$checkIn->id}")
-        ->assertStatus(200)
-        ->assertJsonPath('current_streak', 1);
+        ->assertStatus(204);
+
+    $this->assertDatabaseMissing('check_ins', [
+        'user_id'          => $user->id,
+        'checked_in_date'  => '2026-06-02',
+    ]);
 });
 
 it('user cannot delete another user check-in', function () {

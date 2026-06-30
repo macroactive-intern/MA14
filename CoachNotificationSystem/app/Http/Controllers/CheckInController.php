@@ -1,12 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Http\Resources\CheckInResource;
 use App\Models\CheckIn;
 use App\Services\MilestoneDetector;
 use App\Services\StreakCalculator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 
 class CheckInController extends Controller
@@ -25,30 +30,27 @@ class CheckInController extends Controller
 
         $currentStreak = $calculator->currentStreakFor($request->user());
 
+        Log::info('check_in.created', [
+            'user_id' => $request->user()->id,
+            'date'    => $validated['checked_in_date'],
+            'streak'  => $currentStreak,
+        ]);
+
         $detector->checkAndNotify($request->user(), $currentStreak);
 
-        return response()->json([
-            'data' => [
-                'id' => $checkIn->id,
-                'checked_in_date' => $checkIn->checked_in_date->toDateString(),
-                'current_streak' => $currentStreak,
-            ],
-        ], 201);
+        $checkIn->setAttribute('current_streak', $currentStreak);
+
+        return (new CheckInResource($checkIn))
+            ->response()
+            ->setStatusCode(201);
     }
 
     public function destroy(Request $request, CheckIn $checkIn, StreakCalculator $calculator): JsonResponse
     {
-        if ($checkIn->user_id !== $request->user()->id) {
-            return response()->json(['message' => 'Forbidden.'], 403);
-        }
+        Gate::authorize('delete', $checkIn);
 
         $checkIn->delete();
 
-        $currentStreak = $calculator->currentStreakFor($request->user());
-
-        return response()->json([
-            'message' => 'Check-in deleted.',
-            'current_streak' => $currentStreak,
-        ]);
+        return response()->json(null, 204);
     }
 }

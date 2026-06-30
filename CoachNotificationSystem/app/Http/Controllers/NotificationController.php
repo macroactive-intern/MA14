@@ -1,20 +1,23 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
-use Illuminate\Http\JsonResponse;
+use App\Http\Resources\StreakNotificationResource;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class NotificationController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request): AnonymousResourceCollection
     {
         $notifications = $request->user()
             ->streakNotifications()
             ->latest('notified_at')
             ->latest('created_at')
-            ->get(['id', 'streak_milestone', 'notified_at']);
+            ->get();
 
-        return response()->json(['data' => $notifications]);
+        return StreakNotificationResource::collection($notifications);
     }
 }

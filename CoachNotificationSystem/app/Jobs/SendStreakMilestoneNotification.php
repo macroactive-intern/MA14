@@ -1,11 +1,15 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Jobs;
 
+use App\Exceptions\StreakNotificationNotFoundException;
 use App\Mail\StreakMilestoneNotification as StreakMilestoneNotificationMail;
 use App\Models\StreakNotification;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class SendStreakMilestoneNotification implements ShouldQueue
@@ -23,7 +27,7 @@ class SendStreakMilestoneNotification implements ShouldQueue
         $notification = StreakNotification::with('user')->find($this->streakNotificationId);
 
         if (! $notification) {
-            return;
+            throw new StreakNotificationNotFoundException($this->streakNotificationId);
         }
 
         Mail::to($notification->user)->send(
@@ -31,5 +35,11 @@ class SendStreakMilestoneNotification implements ShouldQueue
         );
 
         $notification->update(['notified_at' => now()]);
+
+        Log::info('streak_notification.sent', [
+            'notification_id' => $notification->id,
+            'user_id'         => $notification->user_id,
+            'milestone'       => $notification->streak_milestone,
+        ]);
     }
 }

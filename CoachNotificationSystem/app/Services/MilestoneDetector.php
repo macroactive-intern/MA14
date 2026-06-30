@@ -1,33 +1,48 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
 use App\Jobs\SendStreakMilestoneNotification;
 use App\Models\StreakNotification;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class MilestoneDetector
 {
-    private const MILESTONES = [7, 14, 21, 28];
-
     public function checkAndNotify(User $user, int $currentStreak): void
     {
-        if (! in_array($currentStreak, self::MILESTONES, strict: true)) {
+        $milestones = config('notifications.streak_milestones');
+
+        if (! in_array($currentStreak, $milestones, strict: true)) {
             return;
         }
 
-        $notification = StreakNotification::firstOrCreate(
-            [
-                'user_id' => $user->id,
-                'streak_milestone' => $currentStreak,
-            ],
-            [
-                'notified_at' => null,
-            ]
-        );
+        DB::transaction(function () use ($user, $currentStreak): void {
+            $existing = StreakNotification::where('user_id', $user->id)
+                ->where('streak_milestone', $currentStreak)
+                ->lockForUpdate()
+                ->first();
 
-        if ($notification->wasRecentlyCreated) {
+            if ($existing) {
+                return;
+            }
+
+            $notification = StreakNotification::create([
+                'user_id'          => $user->id,
+                'streak_milestone' => $currentStreak,
+                'notified_at'      => null,
+            ]);
+
+            Log::info('milestone.detected', [
+                'user_id'         => $user->id,
+                'milestone'       => $currentStreak,
+                'notification_id' => $notification->id,
+            ]);
+
             SendStreakMilestoneNotification::dispatch($notification->id);
-        }
+        });
     }
 }
